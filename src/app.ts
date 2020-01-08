@@ -3,7 +3,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 import * as winston from 'winston';
 import connectToDb from './lib/database';
 import Environment from "./lib/environment";
-import { UserRoute } from "./routes/users";
+import { UserRoute } from "./routes/v1/users";
 import ErrorHandler from "./utils/error";
 import expressWinston = require('express-winston');
 
