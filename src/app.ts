@@ -1,10 +1,10 @@
 import bodyParser from 'body-parser';
 import express, { Express, NextFunction, Request, Response } from "express";
 import * as winston from 'winston';
-import connectToDb from './lib/database';
-import Environment from "./lib/environment";
-import { UserRoute } from "./routes/v1/users";
-import ErrorHandler from "./utils/error";
+import connectToDb from './libs/database';
+import Environment from "./libs/environment";
+import { Routes } from "./routes";
+import ErrorHandler from "./middlewares/error";
 import expressWinston = require('express-winston');
 
 const app: Express = express();
@@ -17,8 +17,7 @@ app.use(expressWinston.logger({
     ]
 }));
 app.use(ErrorHandler);
-
-app.use("/users", UserRoute);
+app.use(Routes);
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
     res.json({ message: "hello world" });

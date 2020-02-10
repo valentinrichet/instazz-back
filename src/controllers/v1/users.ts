@@ -1,20 +1,27 @@
-import User, { IUser } from '../../models/v1/users';
+import User, { IUser } from "../../models/v1/users";
+import { hash } from "../../libs/hash"
 
-interface ICreateUserInput {
-    email: IUser['email'];
-    firstName: IUser['firstName'];
-    lastName: IUser['lastName'];
+interface IUserCreation {
+    username: IUser["username"];
+    hashedPassword: IUser["hashedPassword"];
+    email: IUser["email"];
+    description: IUser["description"];
+    firstName: IUser["firstName"];
+    lastName: IUser["lastName"];
+    role: IUser["role"];
+    signedUp: IUser["signedUp"];
 }
 
-async function CreateUser({
-    email,
-    firstName,
-    lastName
-}: ICreateUserInput): Promise<IUser> {
+async function createUser(userCreationData: IUserCreation & { password: string }): Promise<IUser> {
+    userCreationData.description = " ";
+    userCreationData.role = "user";
+    userCreationData.signedUp = new Date();
+
+    // Hashing Password
+    userCreationData.hashedPassword = await hash(userCreationData.password);
+
     return User.create({
-        email,
-        firstName,
-        lastName
+        ...userCreationData,
     })
         .then((data: IUser) => {
             return data;
@@ -24,7 +31,7 @@ async function CreateUser({
         });
 }
 
-async function GetUser(id: string): Promise<IUser | null> {
+async function getUser(id: string): Promise<IUser | null> {
     return User.findById(id)
         .then((data: IUser | null) => {
             return data;
@@ -34,7 +41,19 @@ async function GetUser(id: string): Promise<IUser | null> {
         });
 };
 
+async function signIn(email: string, password: string): Promise<IUser | null> {
+    const hashedPassword: string = await hash(password);
+    return User.findOne({ "email": email, "hashedPassword": hashedPassword }).exec()
+        .then((data: IUser | null) => {
+            return data;
+        })
+        .catch((error: Error) => {
+            throw error;
+        });
+};
+
 export default {
-    CreateUser,
-    GetUser
+    getUser,
+    createUser,
+    signIn
 };
