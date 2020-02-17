@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from "express";
+import express, { Router } from "express";
 import TagController from "../../controllers/v1/tags";
 import { ITag } from "../../models/v1/tags";
 
@@ -10,7 +10,7 @@ router.get("/v1/tags", async (req, res) => {
         return res.send(tags);
     } catch (error) {
         console.error(error);
-        res.status(400).send("Something went wrong, please retry");
+        return res.status(400).send("Something went wrong, please retry");
     }
 });
 
@@ -39,7 +39,7 @@ router.post("/v1/tags", async (req, res) => {
 
 router.put("/v1/tags/:id", async (req, res) => {
     try {
-        if(req.body.id !== req.params.id) {
+        if (req.body.id !== req.params.id) {
             return res.status(400).send("Malformed request payload");
         }
 
@@ -52,7 +52,7 @@ router.put("/v1/tags/:id", async (req, res) => {
         return res.send(tag);
     } catch (error) {
         console.error(error);
-        res.status(400).send("Malformed request payload");
+        return res.status(400).send("Malformed request payload");
     }
 });
 
@@ -60,10 +60,10 @@ router.delete("/v1/tags/:id", async (req, res) => {
     try {
         const result: boolean = await TagController.deleteTagById(req.params.id);
 
-        return result ? res.send(true) : res.status(400).send(false);;
+        return result ? res.send(true) : res.status(400).send(false);
     } catch (error) {
         console.error(error);
-        res.status(400).send("Malformed request payload");
+        return res.status(400).send("Malformed request payload");
     }
 });
 

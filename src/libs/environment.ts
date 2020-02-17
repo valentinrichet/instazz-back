@@ -14,10 +14,12 @@ export default {
         password: process.env.database_password || ""
     },
     jwtSecret: process.env.jwt_secret || "",
-    salt: process.env.salt || ""
+    salt: process.env.salt || "",
+    uploadDirectory: process.env.upload_directory || "uploads"
 } as {
     port: number;
     database: DatabaseConnectionArgs;
     jwtSecret: string;
     salt: string;
+    uploadDirectory: string;
 };

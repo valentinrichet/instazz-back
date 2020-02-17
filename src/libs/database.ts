@@ -2,15 +2,14 @@ import mongoose from 'mongoose';
 import { DatabaseConnectionArgs } from '../types/database';
 
 export default ({ url, username, password, database }: DatabaseConnectionArgs) => {
-    const connect = () => {
-        mongoose.connect(url, { dbName: database, user: username, pass: password, useNewUrlParser: true, useUnifiedTopology: true })
-            .then(() => {
-                return console.info(`Successfully connected to ${url}`);
-            })
-            .catch(error => {
-                console.error("Error connecting to database: ", error);
-                return process.exit(1);
-            });
+    const connect: () => void = async () => {
+        try {
+            await mongoose.connect(url, { dbName: database, user: username, pass: password, useNewUrlParser: true, useUnifiedTopology: true })
+            console.info(`Successfully connected to ${url}`);
+        } catch (exception) {
+            console.error("Error connecting to database: ", exception);
+            process.exit(1);
+        }
     };
     connect();
     mongoose.connection.on("disconnected", connect);

@@ -9,6 +9,7 @@ import expressWinston = require('express-winston');
 
 const app: Express = express();
 
+app.use(`/${Environment.uploadDirectory}`, express.static(Environment.uploadDirectory));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressWinston.logger({

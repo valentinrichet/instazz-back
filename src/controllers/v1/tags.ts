@@ -1,57 +1,27 @@
 import Tag, { ITag } from '../../models/v1/tags';
 
 async function getTags(): Promise<ITag[]> {
-    return Tag.find({})
-        .then((data: ITag[]) => {
-            return data;
-        })
-        .catch((error: Error) => {
-            throw error;
-        });
+    return await Tag.find({});
 };
 
 async function getTag(id: string): Promise<ITag | null> {
-    return Tag.findById(id)
-        .then((data: ITag | null) => {
-            return data;
-        })
-        .catch((error: Error) => {
-            throw error;
-        });
+    return await Tag.findById(id);
 };
 
 async function createTag(tag: ITag): Promise<ITag> {
-    return Tag.create({ ...tag })
-        .then((data: ITag) => {
-            return data;
-        })
-        .catch((error: Error) => {
-            throw error;
-        });
+    return await Tag.create({ ...tag });
 }
 
 async function updateTag(tag: ITag): Promise<ITag | null> {
-    return Tag.findByIdAndUpdate(tag.id, tag)
-        .then((data: ITag | null) => {
-            return data;
-        })
-        .catch((error: Error) => {
-            throw error;
-        });
+    return await Tag.findByIdAndUpdate(tag.id, tag);
 }
 
 async function deleteTag(tag: ITag): Promise<boolean> {
-    return deleteTagById(tag.id);
+    return await deleteTagById(tag.id);
 };
 
 async function deleteTagById(id: string): Promise<boolean> {
-    return Tag.findByIdAndDelete(id)
-        .then((data: ITag | null) => {
-            return data != null;
-        })
-        .catch((error: Error) => {
-            throw error;
-        });
+    return (await Tag.findByIdAndDelete(id)) != null;
 };
 
 export default {
