@@ -1,7 +1,8 @@
 import User, { IUser } from "../../models/v1/users";
+import { body } from "express-validator"
 import { hash } from "../../libs/hash"
 
-export interface IUserCreation {
+interface IUserCreation {
     username: IUser["username"];
     hashedPassword: IUser["hashedPassword"];
     email: IUser["email"];
@@ -12,10 +13,40 @@ export interface IUserCreation {
     signedUp: IUser["signedUp"];
 }
 
-export interface IUserUpdate {
+interface IUserUpdate {
     _id: IUser["id"];
     email: IUser["email"];
     description: IUser["description"];
+}
+
+function validate(method: string): any {
+    switch (method) {
+        case "createUser": {
+            return [
+                // IUser
+                body("username", "Username is missing").notEmpty(),
+                body("hashedPassword", "Hashed Password should not be specified").not().exists(),
+                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+                body("firstName", "First Name is missing").notEmpty(),
+                body("lastName", "Last Name is missing").notEmpty(),
+                body("birthday", "Birthday is missing").notEmpty(),
+                body("signedUp", "Signed Up should not be specified").not().exists(),
+                body("images", "Images should not be specified").not().exists(),
+                body("followers", "Followers should not be specified").not().exists(),
+                body("following", "Following should not be specified").not().exists(),
+                // Other
+                body("password", "Password must be 6 character long").isLength({ min: 6 })
+            ]
+        }
+        case "signIn": {
+            return [
+                // IUser
+                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+                // Other
+                body("password", "Password is missing").exists()
+            ]
+        }
+    }
 }
 
 async function createUser(userCreationData: IUserCreation & { password: string }): Promise<IUser> {
@@ -44,5 +75,6 @@ export default {
     getUser,
     createUser,
     updateUser,
-    signIn
+    signIn,
+    validate
 };
