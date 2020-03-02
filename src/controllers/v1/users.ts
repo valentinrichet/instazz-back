@@ -2,8 +2,9 @@ import User, { IUser } from "../../models/v1/users";
 import { body } from "express-validator"
 import { hash } from "../../libs/hash"
 import { exists } from "fs";
+import { UserCreationDto, userCreationDtoRules } from "../../dto/v1/users";
 
-interface IUserCreation {
+export interface IUserCreation {
     username: IUser["username"];
     hashedPassword: IUser["hashedPassword"];
     email: IUser["email"];
@@ -27,23 +28,7 @@ function validate(method: string, isAdmin?: boolean): any {
 
     switch (method) {
         case "createUser": {
-            return [
-                // IUser
-                body("username", "Username is missing").notEmpty(),
-                body("hashedPassword", "Hashed Password should not be specified").not().exists(),
-                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
-                body("description", "Description should not be specified").not().exists(),
-                body("firstName", "First Name is missing").notEmpty(),
-                body("lastName", "Last Name is missing").notEmpty(),
-                body("role", "Role should not be specified").not().exists(),
-                body("birthday", "Birthday is missing").notEmpty(),
-                body("signedUp", "Signed Up should not be specified").not().exists(),
-                body("images", "Images should not be specified").not().exists(),
-                body("followers", "Followers should not be specified").not().exists(),
-                body("following", "Following should not be specified").not().exists(),
-                // Other
-                body("password", "Password must be 6 character long").isLength({ min: 6 })
-            ]
+            return userCreationDtoRules();
         }
         case "signIn": {
             return [
@@ -73,12 +58,9 @@ function validate(method: string, isAdmin?: boolean): any {
     }
 }
 
-async function createUser(userCreationData: IUserCreation & { password: string }): Promise<IUser> {
-    userCreationData.description = " ";
-    userCreationData.role = "user";
-    userCreationData.signedUp = new Date();
-    userCreationData.hashedPassword = await hash(userCreationData.password);
-
+async function createUser(userCreationDto: UserCreationDto): Promise<IUser> {
+    const { password, ...otherData } = userCreationDto;
+    const userCreationData: IUserCreation = { ...otherData, hashedPassword: await hash(password), description: " ", role: "user", signedUp: new Date() };
     return await User.create({ ...userCreationData });
 }
 
