@@ -33,7 +33,8 @@ router.post("/v1/test", async (req, res) => {
    });
 });
 
-router.post("/v1/signIn", UserController.validate("signIn"), validator, async (req, res) => {
+router.post(`/v1/signIn`, UserController.validate("signIn"), validator);
+router.post("/v1/signIn", async (req, res) => {
    try {
       const user: IUser | null = await UserController.signIn(req.body.email, req.body.password);
       if (user == null) {
@@ -48,7 +49,8 @@ router.post("/v1/signIn", UserController.validate("signIn"), validator, async (r
    }
 });
 
-router.post("/v1/users", UserController.validate("createUser"), validator, async (req, res) => {
+router.post("/v1/users", UserController.validate("createUser"), validator);
+router.post("/v1/users", async (req, res) => {
    try {
       const user: IUser = await UserController.createUser(req.body);
       return res.send(user);
@@ -74,9 +76,15 @@ router.get("/v1/users/:id", verifyJWT_MW);
 router.get("/v1/users/:id", async (req, res) => {
    try {
       const user: IUser | null = await UserController.getUser(req.params.id);
+      const userData: UserData = ((req as any).user as UserData);
 
       if (user == null) {
          return res.status(404).send(`User with id "${req.params.id}" wasn't found`);
+      }
+
+      // Hides sensitive information
+      if(userData.role !== "admin") {
+         (user.hashedPassword as any) = undefined;
       }
 
       return res.send(user);
@@ -87,12 +95,13 @@ router.get("/v1/users/:id", async (req, res) => {
 });
 
 router.put("/v1/users/:id", verifyJWT_MW);
+router.put("/v1/users/:id", async (req, res) => UserController.validate("updateUser", ((req as any).user as UserData).role === "admin"), validator);
 router.put("/v1/users/:id", async (req, res) => {
    try {
       let user: IUser | null = await UserController.getUser(req.params.id);
       const userData: UserData = ((req as any).user as UserData);
 
-      if (user == null || (userData.id !== req.params.id)) {
+      if (user == null || (userData.role !== "admin" && userData.id !== req.params.id)) {
          return res.status(401).send("You're not allowed to update this user.");
       }
 

@@ -1,6 +1,7 @@
 import User, { IUser } from "../../models/v1/users";
 import { body } from "express-validator"
 import { hash } from "../../libs/hash"
+import { exists } from "fs";
 
 interface IUserCreation {
     username: IUser["username"];
@@ -19,7 +20,11 @@ interface IUserUpdate {
     description: IUser["description"];
 }
 
-function validate(method: string): any {
+function validate(method: string, isAdmin?: boolean): any {
+    if (isAdmin === true) {
+        return [];
+    }
+
     switch (method) {
         case "createUser": {
             return [
@@ -27,8 +32,10 @@ function validate(method: string): any {
                 body("username", "Username is missing").notEmpty(),
                 body("hashedPassword", "Hashed Password should not be specified").not().exists(),
                 body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+                body("description", "Description should not be specified").not().exists(),
                 body("firstName", "First Name is missing").notEmpty(),
                 body("lastName", "Last Name is missing").notEmpty(),
+                body("role", "Role should not be specified").not().exists(),
                 body("birthday", "Birthday is missing").notEmpty(),
                 body("signedUp", "Signed Up should not be specified").not().exists(),
                 body("images", "Images should not be specified").not().exists(),
@@ -44,6 +51,23 @@ function validate(method: string): any {
                 body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
                 // Other
                 body("password", "Password is missing").exists()
+            ]
+        }
+        case "updateUser": {
+            return [
+                // IUser
+                body("username", "Username should not be specified").not().exists(),
+                body("hashedPassword", "Hashed Password should not be specified").not().exists(),
+                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+                body("description", "Description is missing").notEmpty(),
+                body("firstName", "First Name is missing").notEmpty(),
+                body("lastName", "Last Name is missing").notEmpty(),
+                body("role", "Role should not be specified").not().exists(),
+                body("birthday", "Birthday is missing").notEmpty(),
+                body("signedUp", "Signed Up should not be specified").not().exists(),
+                body("images", "Images should not be specified").not().exists(),
+                body("followers", "Followers should not be specified").not().exists(),
+                body("following", "Following should not be specified").not().exists(),
             ]
         }
     }
