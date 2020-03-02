@@ -25,5 +25,5 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: "cd /home/dark/docker/instazz/ && docker-compose down && docker-compose up -d"
+        script: "cd /home/dark/docker/instazz/ && docker-compose down && docker-compose up --build -d"
       
