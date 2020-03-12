@@ -5,20 +5,18 @@ export interface Comment {
     content: string;
 }
 
-export interface IImage extends Document {
+export interface IPost extends Document {
     title: string;
     description: string;
     tags: [string];
     content: string;
     author: string;
-    date: Date;
+    created: Date;
     likedBy: [string];
     comments: [Comment];
 }
 
-
-
-const ImageSchema: Schema = new Schema({
+const PostSchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     tags: [{
@@ -28,13 +26,13 @@ const ImageSchema: Schema = new Schema({
     }],
     content: { type: String, required: true, unique: true },
     author: { type: Schema.Types.ObjectId, ref: "Users", required: true },
-    date: { type: Date, default: Date.now },
+    created: { type: Date, required: true },
     likedBy: [{ type: Schema.Types.ObjectId, ref: "Users", required: true }],
     comments: [{
         author: { type: Schema.Types.ObjectId, ref: "Users", required: true },
         content: { type: String, required: true }
-        
+
     }]
 });
 
-export default mongoose.model<IImage>("Images", ImageSchema);
+export default mongoose.model<IPost>("Posts", PostSchema);

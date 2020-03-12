@@ -1,14 +1,14 @@
+import { body } from "express-validator";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules } from "../../dto/v1/users";
+import { createJWToken } from "../../libs/auth";
+import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
-import { body } from "express-validator"
-import { hash } from "../../libs/hash"
-import { exists } from "fs";
-import { UserCreationDto, userCreationDtoRules } from "../../dto/v1/users";
+import { UserData } from "../../types/user_data";
 
 export interface IUserCreation {
     username: IUser["username"];
     hashedPassword: IUser["hashedPassword"];
     email: IUser["email"];
-    description: IUser["description"];
     firstName: IUser["firstName"];
     lastName: IUser["lastName"];
     role: IUser["role"];
@@ -31,12 +31,7 @@ function validate(method: string, isAdmin?: boolean): any {
             return userCreationDtoRules();
         }
         case "signIn": {
-            return [
-                // IUser
-                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
-                // Other
-                body("password", "Password is missing").exists()
-            ]
+            return userSignInDtoRules();
         }
         case "updateUser": {
             return [
@@ -58,23 +53,37 @@ function validate(method: string, isAdmin?: boolean): any {
     }
 }
 
-async function createUser(userCreationDto: UserCreationDto): Promise<IUser> {
+async function createUser(userCreationDto: UserCreationDto): Promise<UserDto> {
     const { password, ...otherData } = userCreationDto;
-    const userCreationData: IUserCreation = { ...otherData, hashedPassword: await hash(password), description: " ", role: "user", signedUp: new Date() };
-    return await User.create({ ...userCreationData });
+    const userCreationData: IUserCreation = { ...otherData, hashedPassword: await hash(password), role: "user", signedUp: new Date() };
+    const user: IUser = await User.create({ ...userCreationData });
+    const userDto = new UserDto(user);
+    return userDto;
 }
 
-async function updateUser(userUpdateData: IUserUpdate) {
-    return await User.findByIdAndUpdate(userUpdateData._id, userUpdateData);
+async function updateUser(userUpdateData: IUserUpdate): Promise<UserDto | null> {
+    const user: IUser | null = await User.findByIdAndUpdate(userUpdateData._id, userUpdateData);
+    const userDto: UserDto | null = user == null ? null : new UserDto(user);
+    return userDto;
 }
 
-async function getUser(id: string): Promise<IUser | null> {
-    return await User.findById(id);
+async function getUser(id: string): Promise<UserDto | null> {
+    const user: IUser | null = await User.findById(id);
+    const userDto: UserDto | null = user == null ? null : new UserDto(user);
+    return userDto;
 };
 
-async function signIn(email: string, password: string): Promise<IUser | null> {
-    const hashedPassword: string = await hash(password);
-    return await User.findOne({ "email": email, "hashedPassword": hashedPassword }).exec();
+async function signIn(userSignInDto: UserSignInDto): Promise<string | null> {
+    let token: string | null = null;
+    const hashedPassword: string = await hash(userSignInDto.password);
+    const user: IUser | null = await User.findOne({ "email": userSignInDto.email, "hashedPassword": hashedPassword }).exec();
+
+    if (user != null) {
+        const details: { sessionData: UserData } = { sessionData: { id: user._id, role: user.role } };
+        token = createJWToken(details);
+    }
+
+    return token;
 };
 
 export default {

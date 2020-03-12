@@ -1,12 +1,12 @@
 import express, { Router } from "express";
 import multer from "multer";
 import UserController from "../../controllers/v1/users";
-import { createJWToken } from "../../libs/auth";
+import { UserCreationDto, UserDto, UserSignInDto } from "../../dto/v1/users";
 import { getDiskStorage, imageFilter } from "../../libs/upload";
 import { verifyJWT_MW } from "../../middlewares/auth";
 import validator from "../../middlewares/validator";
-import { IUser } from "../../models/v1/users";
 import { UserData } from "../../types/user_data";
+
 
 const router: Router = express.Router();
 
@@ -36,12 +36,10 @@ router.post("/v1/test", async (req, res) => {
 router.post(`/v1/signIn`, UserController.validate("signIn"), validator);
 router.post("/v1/signIn", async (req, res) => {
    try {
-      const user: IUser | null = await UserController.signIn(req.body.email, req.body.password);
-      if (user == null) {
+      const token: string | null = await UserController.signIn(new UserSignInDto(req.body));
+      if (token == null) {
          return res.status(401).send({ error: "Email or Password was wrong" });
       }
-      const details: { sessionData: UserData } = { sessionData: { id: user._id, role: user.role } };
-      const token: any = createJWToken(details);
       return res.send(token);
    } catch (error) {
       console.error(error);
@@ -52,7 +50,7 @@ router.post("/v1/signIn", async (req, res) => {
 router.post("/v1/users", UserController.validate("createUser"), validator);
 router.post("/v1/users", async (req, res) => {
    try {
-      const user: IUser = await UserController.createUser(req.body);
+      const user: UserDto = await UserController.createUser(new UserCreationDto(req.body));
       return res.send(user);
    } catch (error) {
       console.error(error);
@@ -75,18 +73,10 @@ router.post("/v1/users", async (req, res) => {
 router.get("/v1/users/:id", verifyJWT_MW);
 router.get("/v1/users/:id", async (req, res) => {
    try {
-      const user: IUser | null = await UserController.getUser(req.params.id);
-      const userData: UserData = ((req as any).user as UserData);
-
+      const user: UserDto | null = await UserController.getUser(req.params.id);
       if (user == null) {
          return res.status(404).send(`User with id "${req.params.id}" wasn't found`);
       }
-
-      // Hides sensitive information
-      if(userData.role !== "admin") {
-         (user.hashedPassword as any) = undefined;
-      }
-
       return res.send(user);
    } catch (error) {
       console.error(error);
@@ -98,7 +88,7 @@ router.put("/v1/users/:id", verifyJWT_MW);
 router.put("/v1/users/:id", async (req, res) => UserController.validate("updateUser", ((req as any).user as UserData).role === "admin"), validator);
 router.put("/v1/users/:id", async (req, res) => {
    try {
-      let user: IUser | null = await UserController.getUser(req.params.id);
+      let user: UserDto | null = await UserController.getUser(req.params.id);
       const userData: UserData = ((req as any).user as UserData);
 
       if (user == null || (userData.role !== "admin" && userData.id !== req.params.id)) {
@@ -112,7 +102,7 @@ router.put("/v1/users/:id", async (req, res) => {
          user.description = req.body.description;
       }
 
-      await UserController.updateUser({ _id: user?._id, email: user?.email, description: user?.description });
+      //await UserController.updateUser({ _id: user?._id, email: user?.email, description: user?.description });
 
       return res.send(user);
    } catch (error) {
