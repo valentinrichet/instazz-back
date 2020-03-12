@@ -79,7 +79,7 @@ router.put("/v1/users/:id", async (req, res, next) => {
       }
       const userUpdateDto: UserUpdateDto = new UserUpdateDto(req.body);
       if (userData.role !== "admin") {
-         userUpdateDto.role = undefined;
+         delete userUpdateDto.role;
       }
       const userDto: UserDto | null = await UserController.updateUser(req.params.id, userUpdateDto);
       if (userDto == null) {

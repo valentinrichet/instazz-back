@@ -116,13 +116,7 @@ export function userUpdateDtoRules(): ValidationChain[] {
         body("description").optional(),
         body("firstName", "First Name is missing").optional().notEmpty(),
         body("lastName", "Last Name is missing").optional().notEmpty(),
-    ];
-}
-
-export function userUpdateDtoAdminRules(): ValidationChain[] {
-    return [
-        ...userUpdateDtoRules(),
-        body("role", "Role can not be empty if specified").optional().if((value: any, { req }: any) => req.user?.role === "admin").notEmpty()
+        body("role", "Role must be \"user\" or \"admin\"").optional().if((value: any, { req }: any) => req.user?.role === "admin").matches(/\b(?:user|admin)\b/)
     ];
 }
 
