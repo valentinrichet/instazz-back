@@ -57,7 +57,7 @@ export function userCreationDtoRules(): ValidationChain[] {
     return [
         body("username", "Username is missing").notEmpty(),
         body("password", "Password must be 6 character long").isLength({ min: 6 }),
-        body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+        body("email", "Email is not an email").exists().withMessage("Email is missing").isEmail(),
         body("firstName", "First Name is missing").notEmpty(),
         body("lastName", "Last Name is missing").notEmpty()
     ];
@@ -111,7 +111,7 @@ export function userUpdateDtoRules(): ValidationChain[] {
     return [
         body("username", "Username is missing").optional().notEmpty(),
         body("password", "Password must be 6 character long").optional().isLength({ min: 6 }),
-        body("email", "Email is not an email").optional().normalizeEmail().isEmail(),
+        body("email", "Email is not an email").optional().isEmail(),
         body("image").optional(),
         body("description").optional(),
         body("firstName", "First Name is missing").optional().notEmpty(),
@@ -142,7 +142,7 @@ export class UserSignInDto {
 
 export function userSignInDtoRules(): ValidationChain[] {
     return [
-        body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
+        body("email", "Email is not an email").exists().withMessage("Email is missing").isEmail(),
         body("password", "Password is missing").exists()
     ];
 }

@@ -33,8 +33,8 @@ router.post("/v1/test", async (req, res) => {
    });
 });
 
-router.post(`/v1/signIn`, UserController.validate("signIn"), validator);
-router.post("/v1/signIn", async (req, res, next) => {
+router.post(`/v1/sessions`, UserController.validate("signIn"), validator);
+router.post("/v1/sessions", async (req, res, next) => {
    try {
       const token: string | null = await UserController.signIn(new UserSignInDto(req.body));
       if (token == null) {

@@ -2,9 +2,12 @@ import express, { Router } from "express";
 import TagController from "../../controllers/v1/tags";
 import { CreationTagDto, TagDto, UpdateTagDto } from "../../dto/v1/tags";
 import validator from "../../middlewares/validator";
+import { verifyJWT_MW } from "../../middlewares/auth";
+import { UserData } from "../../types/user_data";
 
 const router: Router = express.Router();
 
+router.get("/v1/tags", verifyJWT_MW);
 router.get("/v1/tags", async (req, res, next) => {
     try {
         const tags: TagDto[] = await TagController.getTags();
@@ -14,6 +17,7 @@ router.get("/v1/tags", async (req, res, next) => {
     }
 });
 
+router.get("/v1/tags/:id", verifyJWT_MW);
 router.get("/v1/tags/:id", async (req, res, next) => {
     try {
 
@@ -28,9 +32,14 @@ router.get("/v1/tags/:id", async (req, res, next) => {
     }
 });
 
+router.post("/v1/tags", verifyJWT_MW);
 router.post("/v1/tags", TagController.validate("createTag"), validator);
 router.post("/v1/tags", async (req, res, next) => {
     try {
+        const userData: UserData = ((req as any).user as UserData);
+        if (userData.role !== "admin") {
+            return res.status(401).send("You are not allowed to create tags.");
+        }
         const creationTagDto: CreationTagDto = new CreationTagDto(req.body)
         const tag: TagDto = await TagController.createTag(creationTagDto);
         return res.send(tag);
@@ -39,9 +48,14 @@ router.post("/v1/tags", async (req, res, next) => {
     }
 });
 
+router.put("/v1/tags/:id", verifyJWT_MW);
 router.put("/v1/tags/:id", TagController.validate("updateTag"), validator);
 router.put("/v1/tags/:id", async (req, res, next) => {
     try {
+        const userData: UserData = ((req as any).user as UserData);
+        if (userData.role !== "admin") {
+            return res.status(401).send("You are not allowed to update tags.");
+        }
         const tagId: string = req.params.id;
         const updateTagDto: UpdateTagDto = new UpdateTagDto(req.body)
         const tag: TagDto | null = await TagController.updateTag(tagId, updateTagDto);
@@ -54,8 +68,13 @@ router.put("/v1/tags/:id", async (req, res, next) => {
     }
 });
 
+router.delete("/v1/tags/:id", verifyJWT_MW);
 router.delete("/v1/tags/:id", async (req, res, next) => {
     try {
+        const userData: UserData = ((req as any).user as UserData);
+        if (userData.role !== "admin") {
+            return res.status(401).send("You are not allowed to delete tags.");
+        }
         const tagId: string = req.params.id;
         await TagController.deleteTag(tagId);
         return res.status(204).send();
