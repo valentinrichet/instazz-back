@@ -17,12 +17,8 @@ app.use(expressWinston.logger({
         new winston.transports.Console({})
     ]
 }));
-app.use(ErrorHandler);
 app.use(Routes);
-
-app.get("/", (req: Request, res: Response, next: NextFunction) => {
-    res.json({ message: "hello world" });
-});
+app.use(ErrorHandler);
 
 app.listen(Environment.port, () => {
     console.log(`Listening on port ${Environment.port}`);

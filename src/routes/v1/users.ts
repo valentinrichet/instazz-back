@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import multer from "multer";
 import UserController from "../../controllers/v1/users";
-import { UserCreationDto, UserDto, UserSignInDto } from "../../dto/v1/users";
+import { UserCreationDto, UserDto, UserSignInDto, UserUpdateDto } from "../../dto/v1/users";
 import { getDiskStorage, imageFilter } from "../../libs/upload";
 import { verifyJWT_MW } from "../../middlewares/auth";
 import validator from "../../middlewares/validator";
@@ -34,44 +34,30 @@ router.post("/v1/test", async (req, res) => {
 });
 
 router.post(`/v1/signIn`, UserController.validate("signIn"), validator);
-router.post("/v1/signIn", async (req, res) => {
+router.post("/v1/signIn", async (req, res, next) => {
    try {
       const token: string | null = await UserController.signIn(new UserSignInDto(req.body));
       if (token == null) {
-         return res.status(401).send({ error: "Email or Password was wrong" });
+         return res.status(401).send("Email or Password was wrong");
       }
       return res.send(token);
    } catch (error) {
-      console.error(error);
-      return res.status(500).send("There was an issue with the server, please try later...");
+      next(error);
    }
 });
 
 router.post("/v1/users", UserController.validate("createUser"), validator);
-router.post("/v1/users", async (req, res) => {
+router.post("/v1/users", async (req, res, next) => {
    try {
       const user: UserDto = await UserController.createUser(new UserCreationDto(req.body));
       return res.send(user);
    } catch (error) {
-      console.error(error);
-      if (error != null) {
-         if (error.keyValue != null) {
-            const extractedErrors: any[] = [];
-            if (error.keyValue.email != null) {
-               extractedErrors.push({ "email": `The mail "${error.keyValue.email}" is already in use` });
-            }
-            if (error.keyValue.username != null) {
-               extractedErrors.push({ "username": `The username "${error.keyValue.username}" is already in use` });
-            }
-            return res.status(422).send(extractedErrors);
-         }
-      }
-      return res.status(500).send("There was an issue with the server, please try later...");
+      next(error);
    }
 });
 
 router.get("/v1/users/:id", verifyJWT_MW);
-router.get("/v1/users/:id", async (req, res) => {
+router.get("/v1/users/:id", async (req, res, next) => {
    try {
       const user: UserDto | null = await UserController.getUser(req.params.id);
       if (user == null) {
@@ -79,35 +65,29 @@ router.get("/v1/users/:id", async (req, res) => {
       }
       return res.send(user);
    } catch (error) {
-      console.error(error);
-      return res.status(500).send("There was an issue with the server, please try later...");
+      next(error);
    }
 });
 
 router.put("/v1/users/:id", verifyJWT_MW);
-router.put("/v1/users/:id", async (req, res) => UserController.validate("updateUser", ((req as any).user as UserData).role === "admin"), validator);
-router.put("/v1/users/:id", async (req, res) => {
+router.put("/v1/users/:id", UserController.validate("updateUser"), validator);
+router.put("/v1/users/:id", async (req, res, next) => {
    try {
-      let user: UserDto | null = await UserController.getUser(req.params.id);
       const userData: UserData = ((req as any).user as UserData);
-
-      if (user == null || (userData.role !== "admin" && userData.id !== req.params.id)) {
+      if (userData.role !== "admin" && userData.id !== req.params.id) {
          return res.status(401).send("You're not allowed to update this user.");
       }
-
-      if (req.body.email != null) {
-         user.email = req.body.email;
+      const userUpdateDto: UserUpdateDto = new UserUpdateDto(req.body);
+      if (userData.role !== "admin") {
+         userUpdateDto.role = undefined;
       }
-      if (req.body.description != null) {
-         user.description = req.body.description;
+      const userDto: UserDto | null = await UserController.updateUser(req.params.id, userUpdateDto);
+      if (userDto == null) {
+         return res.status(404).send(`User with id "${req.params.id}" wasn't found`);
       }
-
-      //await UserController.updateUser({ _id: user?._id, email: user?.email, description: user?.description });
-
-      return res.send(user);
+      return res.send(userDto);
    } catch (error) {
-      console.error(error);
-      return res.status(400).send("Malformed request payload");
+      next(error);
    }
 });
 

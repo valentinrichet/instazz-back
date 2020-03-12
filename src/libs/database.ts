@@ -5,6 +5,8 @@ export default ({ url, username, password, database }: DatabaseConnectionArgs) =
     const connect: () => void = async () => {
         try {
             await mongoose.connect(url, { dbName: database, user: username, pass: password, useNewUrlParser: true, useUnifiedTopology: true })
+            require('../models/v1/posts');
+            //require('./models/Comments');
             console.info(`Successfully connected to ${url}`);
         } catch (exception) {
             console.error("Error connecting to database: ", exception);

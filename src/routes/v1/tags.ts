@@ -1,69 +1,66 @@
 import express, { Router } from "express";
 import TagController from "../../controllers/v1/tags";
-import { ITag } from "../../models/v1/tags";
+import { CreationTagDto, TagDto, UpdateTagDto } from "../../dto/v1/tags";
+import validator from "../../middlewares/validator";
 
 const router: Router = express.Router();
 
-router.get("/v1/tags", async (req, res) => {
+router.get("/v1/tags", async (req, res, next) => {
     try {
-        const tags: ITag[] = await TagController.getTags();
+        const tags: TagDto[] = await TagController.getTags();
         return res.send(tags);
     } catch (error) {
-        console.error(error);
-        return res.status(400).send("Something went wrong, please retry");
+        next(error);
     }
 });
 
-router.get("/v1/tags/:id", async (req, res) => {
+router.get("/v1/tags/:id", async (req, res, next) => {
     try {
-        const tag: ITag | null = await TagController.getTag(req.params.id);
+
+        const tagId: string = req.params.id;
+        const tag: TagDto | null = await TagController.getTag(tagId);
         if (tag == null) {
-            return res.status(404).send("Not found");
+            return res.status(404).send(`Tag with id "${tagId}" wasn't found`);
         }
         return res.send(tag);
     } catch (error) {
-        console.error(error);
-        return res.status(400).send("Something went wrong, please retry");
+        next(error);
     }
 });
 
-router.post("/v1/tags", async (req, res) => {
+router.post("/v1/tags", TagController.validate("createTag"), validator);
+router.post("/v1/tags", async (req, res, next) => {
     try {
-        const tag: ITag = await TagController.createTag(req.body);
+        const creationTagDto: CreationTagDto = new CreationTagDto(req.body)
+        const tag: TagDto = await TagController.createTag(creationTagDto);
         return res.send(tag);
     } catch (error) {
-        console.error(error);
-        return res.status(400).send("Malformed request payload");
+        next(error);
     }
 });
 
-router.put("/v1/tags/:id", async (req, res) => {
+router.put("/v1/tags/:id", TagController.validate("updateTag"), validator);
+router.put("/v1/tags/:id", async (req, res, next) => {
     try {
-        if (req.body.id !== req.params.id) {
-            return res.status(400).send("Malformed request payload");
-        }
-
-        const tag: ITag | null = await TagController.updateTag(req.body);
-
+        const tagId: string = req.params.id;
+        const updateTagDto: UpdateTagDto = new UpdateTagDto(req.body)
+        const tag: TagDto | null = await TagController.updateTag(tagId, updateTagDto);
         if (tag == null) {
-            return res.status(404).send("Not found");
+            return res.status(404).send(`Tag with id "${tagId}" wasn't found`);
         }
-
         return res.send(tag);
     } catch (error) {
-        console.error(error);
-        return res.status(400).send("Malformed request payload");
+        next(error);
     }
 });
 
-router.delete("/v1/tags/:id", async (req, res) => {
+router.delete("/v1/tags/:id", async (req, res, next) => {
     try {
-        const result: boolean = await TagController.deleteTagById(req.params.id);
-
-        return result ? res.send(true) : res.status(400).send(false);
+        const tagId: string = req.params.id;
+        await TagController.deleteTag(tagId);
+        return res.status(204).send();
     } catch (error) {
-        console.error(error);
-        return res.status(400).send("Malformed request payload");
+        next(error);
     }
 });
 

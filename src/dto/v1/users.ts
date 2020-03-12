@@ -1,6 +1,5 @@
+import { body, ValidationChain } from "express-validator";
 import { IUser } from "../../models/v1/users";
-import { body } from "express-validator"
-import { ValidationChain } from "express-validator";
 
 /* UserCreation */
 
@@ -60,8 +59,70 @@ export function userCreationDtoRules(): ValidationChain[] {
         body("password", "Password must be 6 character long").isLength({ min: 6 }),
         body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
         body("firstName", "First Name is missing").notEmpty(),
-        body("lastName", "Last Name is missing").notEmpty(),
-        body("birthday", "Birthday is missing").notEmpty()
+        body("lastName", "Last Name is missing").notEmpty()
+    ];
+}
+
+/* *** */
+
+/* UserUpdateDto */
+
+export class UserUpdateDto {
+    public username?: IUser["username"];
+    public password?: string;
+    public email?: IUser["email"];
+    public image?: IUser["image"];
+    public description?: IUser["description"];
+    public firstName?: IUser["firstName"];
+    public lastName?: IUser["lastName"];
+    public role?: IUser["role"];
+
+    public constructor(json: any) {
+        if (json != null) {
+            if (json.username != null) {
+                this.username = json.username;
+            }
+            if (json.password != null) {
+                this.password = json.password;
+            }
+            if (json.email != null) {
+                this.email = json.email;
+            }
+            if (json.image !== undefined) {
+                this.image = json.image;
+            }
+            if (json.description !== undefined) {
+                this.description = json.description;
+            }
+            if (json.firstName != null) {
+                this.firstName = json.firstName;
+            }
+            if (json.lastName != null) {
+                this.lastName = json.lastName;
+            }
+            if (json.role != null) {
+                this.role = json.role;
+            }
+        }
+    }
+}
+
+export function userUpdateDtoRules(): ValidationChain[] {
+    return [
+        body("username", "Username is missing").optional().notEmpty(),
+        body("password", "Password must be 6 character long").optional().isLength({ min: 6 }),
+        body("email", "Email is not an email").optional().normalizeEmail().isEmail(),
+        body("image").optional(),
+        body("description").optional(),
+        body("firstName", "First Name is missing").optional().notEmpty(),
+        body("lastName", "Last Name is missing").optional().notEmpty(),
+    ];
+}
+
+export function userUpdateDtoAdminRules(): ValidationChain[] {
+    return [
+        ...userUpdateDtoRules(),
+        body("role", "Role can not be empty if specified").optional().if((value: any, { req }: any) => req.user?.role === "admin").notEmpty()
     ];
 }
 

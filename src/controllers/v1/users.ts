@@ -1,5 +1,4 @@
-import { body } from "express-validator";
-import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoAdminRules, userUpdateDtoRules } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
@@ -16,16 +15,17 @@ export interface IUserCreation {
 }
 
 interface IUserUpdate {
-    _id: IUser["id"];
-    email: IUser["email"];
-    description: IUser["description"];
+    username?: IUser["username"];
+    hashedPassword?: IUser["hashedPassword"];
+    email?: IUser["email"];
+    image?: IUser["image"];
+    description?: IUser["description"];
+    firstName?: IUser["firstName"];
+    lastName?: IUser["lastName"];
+    role?: IUser["role"];
 }
 
-function validate(method: string, isAdmin?: boolean): any {
-    if (isAdmin === true) {
-        return [];
-    }
-
+function validate(method: string): any {
     switch (method) {
         case "createUser": {
             return userCreationDtoRules();
@@ -34,35 +34,29 @@ function validate(method: string, isAdmin?: boolean): any {
             return userSignInDtoRules();
         }
         case "updateUser": {
-            return [
-                // IUser
-                body("username", "Username should not be specified").not().exists(),
-                body("hashedPassword", "Hashed Password should not be specified").not().exists(),
-                body("email", "Email is not an email").exists().withMessage("Email is missing").normalizeEmail().isEmail(),
-                body("description", "Description is missing").notEmpty(),
-                body("firstName", "First Name is missing").notEmpty(),
-                body("lastName", "Last Name is missing").notEmpty(),
-                body("role", "Role should not be specified").not().exists(),
-                body("birthday", "Birthday is missing").notEmpty(),
-                body("signedUp", "Signed Up should not be specified").not().exists(),
-                body("images", "Images should not be specified").not().exists(),
-                body("followers", "Followers should not be specified").not().exists(),
-                body("following", "Following should not be specified").not().exists(),
-            ]
+            return userUpdateDtoRules();
+        }
+        default: {
+            return [];
         }
     }
 }
 
 async function createUser(userCreationDto: UserCreationDto): Promise<UserDto> {
     const { password, ...otherData } = userCreationDto;
-    const userCreationData: IUserCreation = { ...otherData, hashedPassword: await hash(password), role: "user", signedUp: new Date() };
-    const user: IUser = await User.create({ ...userCreationData });
+    const userCreation: IUserCreation = { ...otherData, hashedPassword: await hash(password), role: "user", signedUp: new Date() };
+    const user: IUser = await User.create({ ...userCreation });
     const userDto = new UserDto(user);
     return userDto;
 }
 
-async function updateUser(userUpdateData: IUserUpdate): Promise<UserDto | null> {
-    const user: IUser | null = await User.findByIdAndUpdate(userUpdateData._id, userUpdateData);
+async function updateUser(id: string, userUpdateDto: UserUpdateDto): Promise<UserDto | null> {
+    const { password, ...otherData } = userUpdateDto;
+    const userUpdate: IUserUpdate = { ...otherData };
+    if (password != null) {
+        userUpdate.hashedPassword = await hash(password);
+    }
+    const user: IUser | null = await User.findByIdAndUpdate(id, userUpdate, { new: true });
     const userDto: UserDto | null = user == null ? null : new UserDto(user);
     return userDto;
 }
