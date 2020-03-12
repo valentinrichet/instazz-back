@@ -1,4 +1,4 @@
-import { CreationTagDto, UpdateTagDto, tagCreationAndUpdateDtoRules, TagDto } from '../../dto/v1/tags';
+import { CreationTagDto, tagCreationAndUpdateDtoRules, TagDto, UpdateTagDto } from '../../dto/v1/tags';
 import Tag, { ITag } from '../../models/v1/tags';
 
 export interface ITagCreation {

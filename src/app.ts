@@ -1,10 +1,10 @@
 import bodyParser from 'body-parser';
-import express, { Express, NextFunction, Request, Response } from "express";
+import express, { Express } from "express";
 import * as winston from 'winston';
 import connectToDb from './libs/database';
 import Environment from "./libs/environment";
-import { Routes } from "./routes";
 import ErrorHandler from "./middlewares/error";
+import { Routes } from "./routes";
 import expressWinston = require('express-winston');
 
 const app: Express = express();

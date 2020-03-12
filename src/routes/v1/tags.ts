@@ -1,8 +1,8 @@
 import express, { Router } from "express";
 import TagController from "../../controllers/v1/tags";
 import { CreationTagDto, TagDto, UpdateTagDto } from "../../dto/v1/tags";
-import validator from "../../middlewares/validator";
 import { verifyJWT_MW } from "../../middlewares/auth";
+import validator from "../../middlewares/validator";
 import { UserData } from "../../types/user_data";
 
 const router: Router = express.Router();

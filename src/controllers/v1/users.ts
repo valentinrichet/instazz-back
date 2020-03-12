@@ -1,4 +1,4 @@
-import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoAdminRules, userUpdateDtoRules } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
