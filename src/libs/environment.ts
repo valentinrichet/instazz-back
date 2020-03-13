@@ -15,11 +15,13 @@ export default {
     },
     jwtSecret: process.env.jwt_secret || "",
     salt: process.env.salt || "",
-    uploadDirectory: process.env.upload_directory || "uploads"
+    uploadDirectory: process.env.upload_directory || "uploads",
+    queryLimit: parseInt(process.env.query_limit || "10"),
 } as {
     port: number;
     database: DatabaseConnectionArgs;
     jwtSecret: string;
     salt: string;
     uploadDirectory: string;
+    queryLimit: number;
 };

@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import multer from "multer";
 import UserController from "../../controllers/v1/users";
-import { UserCreationDto, UserDto, UserFollowDto, UserSignInDto, UserUpdateDto } from "../../dto/v1/users";
+import { UserCreationDto, UserDto, UserFollowDto, UserFollowingAndFollowerDto, UserPostDto, UserSignInDto, UserUpdateDto } from "../../dto/v1/users";
 import { getDiskStorage, imageFilter } from "../../libs/upload";
 import { isAdminOrUser_MW, verifyJWT_MW } from "../../middlewares/auth";
 import validator from "../../middlewares/validator";
@@ -62,7 +62,7 @@ router.get("/v1/users/:id", async (req, res, next) => {
       const userId: string = req.params.id;
       const user: UserDto | null = await UserController.getUser(userId);
       if (user == null) {
-         return res.status(404).send(`User with id "${userId}" wasn't found`);
+         return res.status(404).send(`User with id "${userId}" was not found`);
       }
       return res.send(user);
    } catch (error) {
@@ -82,9 +82,54 @@ router.put("/v1/users/:id", async (req, res, next) => {
       }
       const userDto: UserDto | null = await UserController.updateUser(userId, userUpdateDto);
       if (userDto == null) {
-         return res.status(404).send(`User with id "${userId}" wasn't found`);
+         return res.status(404).send(`User with id "${userId}" was not found`);
       }
       return res.send(userDto);
+   } catch (error) {
+      next(error);
+   }
+});
+
+router.get("/v1/users/:id/posts", verifyJWT_MW);
+router.get("/v1/users/:id/posts", async (req, res, next) => {
+   try {
+      const userId: string = req.params.id;
+      const page: string = req.query.page == null ? "0" : req.query.page;
+      const postsDto: UserPostDto[] | null = await UserController.getPosts(userId, page);
+      if (postsDto == null) {
+         return res.status(404).send(`User with id "${userId}" was not found`);
+      }
+      return res.status(200).send(postsDto);
+   } catch (error) {
+      next(error);
+   }
+});
+
+router.get("/v1/users/:id/following", verifyJWT_MW);
+router.get("/v1/users/:id/following", async (req, res, next) => {
+   try {
+      const userId: string = req.params.id;
+      const page: string = req.query.page == null ? "0" : req.query.page;
+      const followingDto: UserFollowingAndFollowerDto[] | null = await UserController.getFollowing(userId, page);
+      if (followingDto == null) {
+         return res.status(404).send(`User with id "${userId}" was not found`);
+      }
+      return res.status(200).send(followingDto);
+   } catch (error) {
+      next(error);
+   }
+});
+
+router.get("/v1/users/:id/followers", verifyJWT_MW);
+router.get("/v1/users/:id/followers", async (req, res, next) => {
+   try {
+      const userId: string = req.params.id;
+      const page: string = req.query.page == null ? "0" : req.query.page;
+      const followersDto: UserFollowingAndFollowerDto[] | null = await UserController.getFollowers(userId, page);
+      if (followersDto == null) {
+         return res.status(404).send(`User with id "${userId}" was not found`);
+      }
+      return res.status(200).send(followersDto);
    } catch (error) {
       next(error);
    }

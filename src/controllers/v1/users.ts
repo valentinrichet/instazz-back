@@ -1,5 +1,6 @@
-import { UserCreationDto, userCreationDtoRules, UserDto, UserFollowDto, userFollowDtoRules, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules, UserFollowingAndFollowerDto } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserFollowDto, userFollowDtoRules, UserFollowingAndFollowerDto, UserPostDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
+import Environment from "../../libs/environment";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
 import { UserData } from "../../types/user_data";
@@ -54,48 +55,54 @@ async function createUser(userCreationDto: UserCreationDto): Promise<UserDto> {
 }
 
 async function updateUser(id: string, userUpdateDto: UserUpdateDto): Promise<UserDto | null> {
+    let user: IUser | null = null;
+    let userDto: UserDto | null = null;
     const { password, ...otherData } = userUpdateDto;
     const userUpdate: IUserUpdate = { ...otherData };
     if (password != null) {
         userUpdate.hashedPassword = await hash(password);
     }
-    const user: IUser | null = await User.findByIdAndUpdate(id, userUpdate, { new: true });
-    const userDto: UserDto | null = user == null ? null : new UserDto(user);
+    try {
+        user = await User.findByIdAndUpdate(id, userUpdate, { new: true });
+    } finally {
+        userDto = user == null ? null : new UserDto(user);
+    }
     return userDto;
 }
 
 async function getUser(id: string): Promise<UserDto | null> {
-    const user: IUser | null = await User.findById(id);
-    if (user != null) {
-        await user.populate([
+    let user: IUser | null = null;
+    let userDto: UserDto | null = null;
+    try {
+        user = await User.findById(id).populate([
             {
                 path: "followers",
-                select: "_id username firstName lastName image",
+                select: UserFollowingAndFollowerDto.select,
                 options:
                 {
-                    limit: 10
+                    limit: Environment.queryLimit
                 }
             },
             {
                 path: "following",
-                select: "_id username firstName lastName image",
+                select: UserFollowingAndFollowerDto.select,
                 options:
                 {
-                    limit: 10
+                    limit: Environment.queryLimit
                 }
             },
             {
                 path: "posts",
-                select: "_id content",
+                select: UserPostDto.select,
                 options:
                 {
-                    limit: 20,
-                    sort: { created: -1 }
+                    limit: Environment.queryLimit,
                 }
             }
-        ]).execPopulate();
+        ]);
+    } finally {
+        userDto = user == null ? null : new UserDto(user);
     }
-    const userDto: UserDto | null = user == null ? null : new UserDto(user);
     return userDto;
 };
 
@@ -121,35 +128,63 @@ async function unfollow(id: string, unfollowId: string): Promise<void> {
 }
 
 async function getFollowers(id: string, page: string): Promise<UserFollowingAndFollowerDto[] | null> {
-    const limit: number = 10;
-    const start: number = (parseInt(page) - 1) * limit;
-    const user = await User.findById(id).populate({
-        path: "followers",
-        select: "_id username firstName lastName image",
-        options:
-        {
-            start: start,
-            limit: limit
-        }
-    });
-    const userFollowers: UserFollowingAndFollowerDto[] | null = user == null ? null : user.followers.map(follower => new UserFollowingAndFollowerDto(follower));
-    return userFollowers;
+    let user: IUser | null = null;
+    let userFollowersDto: UserFollowingAndFollowerDto[] | null = null;
+    try {
+        const skip: number = (parseInt(page) - 1) * Environment.queryLimit;
+        user = await User.findById(id).populate({
+            path: "followers",
+            select: UserFollowingAndFollowerDto.select,
+            options:
+            {
+                skip: skip,
+                limit: Environment.queryLimit
+            }
+        });
+    } finally {
+        userFollowersDto = user == null ? null : user.followers.map(follower => new UserFollowingAndFollowerDto(follower));
+    }
+    return userFollowersDto;
 }
 
 async function getFollowing(id: string, page: string): Promise<UserFollowingAndFollowerDto[] | null> {
-    const limit: number = 10;
-    const start: number = (parseInt(page) - 1) * limit;
-    const user = await User.findById(id).populate({
-        path: "following",
-        select: "_id username firstName lastName image",
-        options:
-        {
-            start: start,
-            limit: limit
-        }
-    });
-    const userFollowing: UserFollowingAndFollowerDto[] | null = user == null ? null : user.following.map(follower => new UserFollowingAndFollowerDto(follower));
-    return userFollowing;
+    let user: IUser | null = null;
+    let userFollowingDto: UserFollowingAndFollowerDto[] | null = null;
+    try {
+        const skip: number = (parseInt(page) - 1) * Environment.queryLimit;
+        user = await User.findById(id).populate({
+            path: "following",
+            select: UserFollowingAndFollowerDto.select,
+            options:
+            {
+                skip: skip,
+                limit: Environment.queryLimit
+            }
+        });
+    } finally {
+        userFollowingDto = user == null ? null : user.following.map(follow => new UserFollowingAndFollowerDto(follow));
+    }
+    return userFollowingDto;
+}
+
+async function getPosts(id: string, page: string): Promise<UserPostDto[] | null> {
+    let user: IUser | null = null;
+    let userPostsDto: UserPostDto[] | null = null;
+    try {
+        const skip: number = (parseInt(page) - 1) * Environment.queryLimit;
+        user = await User.findById(id).populate({
+            path: "posts",
+            select: UserPostDto.select,
+            options:
+            {
+                skip: skip,
+                limit: Environment.queryLimit
+            }
+        });
+    } finally {
+        userPostsDto = user == null ? null : user.posts.map(post => new UserPostDto(post));
+    }
+    return userPostsDto;
 }
 
 export default {
@@ -161,5 +196,6 @@ export default {
     unfollow,
     getFollowers,
     getFollowing,
+    getPosts,
     validate
 };

@@ -1,4 +1,5 @@
 import { body, ValidationChain } from "express-validator";
+import { IPost } from "../../models/v1/posts";
 import { IUser } from "../../models/v1/users";
 
 /* UserCreation */
@@ -146,7 +147,7 @@ export function userSignInDtoRules(): ValidationChain[] {
 /* UserFollowDto */
 
 export class UserFollowDto {
-    public id: IUser["id"];
+    public id: IUser["_id"];
 
     public constructor(json: any) {
         this.id = json?.id;
@@ -164,7 +165,7 @@ export function userFollowDtoRules(): ValidationChain[] {
 /* UserFollowDto */
 
 export class UserFollowingAndFollowerDto {
-    public id: IUser["id"];
+    public id: IUser["_id"];
     public username: IUser["username"];
     public firstName: IUser["firstName"];
     public lastName: IUser["lastName"];
@@ -176,6 +177,30 @@ export class UserFollowingAndFollowerDto {
         this.firstName = json?.firstName;
         this.lastName = json?.lastName;
         this.image = json?.image;
+    }
+
+    public static get select(): string {
+        return "_id username firstName lastName image";
+    }
+}
+
+/* *** */
+
+/* UserPostDto */
+
+export class UserPostDto {
+    public id: IPost["_id"];
+    public content: IPost["content"];
+    public likedByCount: IPost["likedByCount"];
+
+    public constructor(json: IPost) {
+        this.id = json?._id;
+        this.content = json?.content;
+        this.likedByCount = json?.likedByCount;
+    }
+
+    public static get select(): string {
+        return "_id content likedByCount";
     }
 }
 

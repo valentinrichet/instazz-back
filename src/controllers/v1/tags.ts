@@ -30,8 +30,13 @@ async function getTags(): Promise<TagDto[]> {
 };
 
 async function getTag(id: string): Promise<TagDto | null> {
-    const tag: ITag | null = await Tag.findById(id);
-    const tagDto: TagDto | null = tag == null ? null : new TagDto(tag);
+    let tag: ITag | null = null;
+    let tagDto: TagDto | null = null;
+    try {
+        tag = await Tag.findById(id);
+    } finally {
+        tagDto = tag == null ? null : new TagDto(tag);
+    }
     return tagDto;
 };
 
@@ -43,9 +48,14 @@ async function createTag(creationTagDto: CreationTagDto): Promise<TagDto> {
 }
 
 async function updateTag(id: string, updateTagDto: UpdateTagDto): Promise<TagDto | null> {
+    let tag: ITag | null = null;
+    let tagDto: TagDto | null = null;
     const tagCreationAndUpdate: ITagUpdate = updateTagDto;
-    const tag: ITag | null = await Tag.findByIdAndUpdate(id, tagCreationAndUpdate, { new: true });
-    const tagDto: TagDto | null = tag == null ? null : new TagDto(tag);
+    try {
+        tag = await Tag.findByIdAndUpdate(id, tagCreationAndUpdate, { new: true });
+    } finally {
+        tagDto = tag == null ? null : new TagDto(tag);
+    }
     return tagDto;
 }
 

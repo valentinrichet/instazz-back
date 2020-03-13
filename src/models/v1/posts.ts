@@ -13,6 +13,7 @@ export interface IPost extends Document {
     author: string;
     created: Date;
     likedBy: [string];
+    likedByCount: number;
     comments: [Comment];
 }
 
@@ -33,6 +34,10 @@ const PostSchema: Schema = new Schema({
         content: { type: String, required: true }
 
     }]
+});
+
+PostSchema.virtual("likedByCount").get(function (this: IPost) {
+    return this.likedBy.length;
 });
 
 export default mongoose.model<IPost>("Posts", PostSchema);

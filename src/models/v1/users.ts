@@ -13,6 +13,7 @@ export interface IUser extends Document {
   posts: [any];
   followers: [any];
   following: [any];
+  followingCount: number;
 }
 
 const UserSchema: Schema = new Schema({
