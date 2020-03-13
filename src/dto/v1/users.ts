@@ -142,3 +142,21 @@ export function userSignInDtoRules(): ValidationChain[] {
 }
 
 /* *** */
+
+/* UserSignIn */
+
+export class UserFollowDto {
+    public id: IUser["id"];
+
+    public constructor(json: any) {
+        this.id = json?.id;
+    }
+}
+
+export function userFollowDtoRules(): ValidationChain[] {
+    return [
+        body("id", "Email is not an email").isMongoId()
+    ];
+}
+
+/* *** */

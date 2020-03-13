@@ -1,4 +1,4 @@
-import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules, UserFollowDto, userFollowDtoRules } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
@@ -35,6 +35,9 @@ function validate(method: string): any {
         }
         case "updateUser": {
             return userUpdateDtoRules();
+        }
+        case "followUser": {
+            return userFollowDtoRules();
         }
         default: {
             return [];
@@ -80,10 +83,20 @@ async function signIn(userSignInDto: UserSignInDto): Promise<string | null> {
     return token;
 };
 
+async function follow(id: string, userFollowDto: UserFollowDto): Promise<void> {
+    await Promise.all([User.findByIdAndUpdate(id, { $push: { following: userFollowDto.id } }), User.findByIdAndUpdate(userFollowDto.id, { $push: { followers: id } })]);
+}
+
+async function unfollow(id: string, unfollowId: string): Promise<void> {
+    await Promise.all([User.findByIdAndUpdate(id, { $pull: { following: unfollowId } }), User.findByIdAndUpdate(unfollowId, { $pull: { followers: id } })]);
+}
+
 export default {
     getUser,
     createUser,
     updateUser,
     signIn,
+    follow,
+    unfollow,
     validate
 };

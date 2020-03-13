@@ -1,9 +1,9 @@
 import express, { Router } from "express";
 import multer from "multer";
 import UserController from "../../controllers/v1/users";
-import { UserCreationDto, UserDto, UserSignInDto, UserUpdateDto } from "../../dto/v1/users";
+import { UserCreationDto, UserDto, UserSignInDto, UserUpdateDto, UserFollowDto } from "../../dto/v1/users";
 import { getDiskStorage, imageFilter } from "../../libs/upload";
-import { verifyJWT_MW } from "../../middlewares/auth";
+import { verifyJWT_MW, isAdminOrUser_MW } from "../../middlewares/auth";
 import validator from "../../middlewares/validator";
 import { UserData } from "../../types/user_data";
 
@@ -59,9 +59,10 @@ router.post("/v1/users", async (req, res, next) => {
 router.get("/v1/users/:id", verifyJWT_MW);
 router.get("/v1/users/:id", async (req, res, next) => {
    try {
-      const user: UserDto | null = await UserController.getUser(req.params.id);
+      const userId: string = req.params.id;
+      const user: UserDto | null = await UserController.getUser(userId);
       if (user == null) {
-         return res.status(404).send(`User with id "${req.params.id}" wasn't found`);
+         return res.status(404).send(`User with id "${userId}" wasn't found`);
       }
       return res.send(user);
    } catch (error) {
@@ -69,26 +70,51 @@ router.get("/v1/users/:id", async (req, res, next) => {
    }
 });
 
-router.put("/v1/users/:id", verifyJWT_MW);
+router.put("/v1/users/:id", isAdminOrUser_MW);
 router.put("/v1/users/:id", UserController.validate("updateUser"), validator);
 router.put("/v1/users/:id", async (req, res, next) => {
    try {
+      const userId: string = req.params.id;
       const userData: UserData = ((req as any).user as UserData);
-      if (userData.role !== "admin" && userData.id !== req.params.id) {
-         return res.status(401).send("You're not allowed to update this user.");
-      }
       const userUpdateDto: UserUpdateDto = new UserUpdateDto(req.body);
       if (userData.role !== "admin") {
          delete userUpdateDto.role;
       }
-      const userDto: UserDto | null = await UserController.updateUser(req.params.id, userUpdateDto);
+      const userDto: UserDto | null = await UserController.updateUser(userId, userUpdateDto);
       if (userDto == null) {
-         return res.status(404).send(`User with id "${req.params.id}" wasn't found`);
+         return res.status(404).send(`User with id "${userId}" wasn't found`);
       }
       return res.send(userDto);
    } catch (error) {
       next(error);
    }
 });
+
+router.post("/v1/users/:id/following", isAdminOrUser_MW);
+router.post("/v1/users/:id/following", UserController.validate("followUser"), validator);
+router.post("/v1/users/:id/following", async (req, res, next) => {
+   try {
+      const userId: string = req.params.id;
+      const userFollowDto: UserFollowDto = new UserFollowDto(req.body);
+      await UserController.follow(userId, userFollowDto);
+      return res.status(204).send();
+   } catch (error) {
+      next(error);
+   }
+});
+
+router.delete("/v1/users/:id/following/:followerId", isAdminOrUser_MW);
+router.delete("/v1/users/:id/following/:followerId", UserController.validate("followUser"), validator);
+router.delete("/v1/users/:id/following/:followerId", async (req, res, next) => {
+   try {
+      const userId: string = req.params.id;
+      const followingId: string = req.params.followerId;
+      await UserController.unfollow(userId, followingId);
+      return res.status(204).send();
+   } catch (error) {
+      next(error);
+   }
+});
+
 
 export const UserRoute = router;
