@@ -1,9 +1,9 @@
 import express, { Router } from "express";
 import multer from "multer";
 import UserController from "../../controllers/v1/users";
-import { UserCreationDto, UserDto, UserSignInDto, UserUpdateDto, UserFollowDto } from "../../dto/v1/users";
+import { UserCreationDto, UserDto, UserFollowDto, UserSignInDto, UserUpdateDto } from "../../dto/v1/users";
 import { getDiskStorage, imageFilter } from "../../libs/upload";
-import { verifyJWT_MW, isAdminOrUser_MW } from "../../middlewares/auth";
+import { isAdminOrUser_MW, verifyJWT_MW } from "../../middlewares/auth";
 import validator from "../../middlewares/validator";
 import { UserData } from "../../types/user_data";
 
@@ -96,6 +96,9 @@ router.post("/v1/users/:id/following", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
       const userFollowDto: UserFollowDto = new UserFollowDto(req.body);
+      if (userId === userFollowDto?.id) {
+         return res.status(400).send("You can not follow yourself.");
+      }
       await UserController.follow(userId, userFollowDto);
       return res.status(204).send();
    } catch (error) {
@@ -109,6 +112,9 @@ router.delete("/v1/users/:id/following/:followerId", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
       const followingId: string = req.params.followerId;
+      if (userId === followingId) {
+         return res.status(400).send("You can not unfollow yourself.");
+      }
       await UserController.unfollow(userId, followingId);
       return res.status(204).send();
    } catch (error) {

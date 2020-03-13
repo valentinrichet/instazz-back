@@ -45,28 +45,4 @@ const UserSchema: Schema = new Schema({
   }],
 });
 
-const autoPopulate = function (next: any) {
-  const populateQuery: any = [
-    {
-      path: "followers", select: "_id firstName lastName image"
-    },
-    {
-      path: "following", select: "_id firstName lastName image"
-    },
-    {
-      path: "posts",
-      options:
-      {
-        limit: 20,
-        sort: { created: -1 }
-      },
-      select: "_id content"
-    }
-  ];
-  this.populate(populateQuery);
-  next();
-};
-
-UserSchema.pre("findOne", autoPopulate);
-UserSchema.pre("find", autoPopulate);
 export default mongoose.model<IUser>("Users", UserSchema);

@@ -1,4 +1,4 @@
-import { UserCreationDto, userCreationDtoRules, UserDto, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules, UserFollowDto, userFollowDtoRules } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserFollowDto, userFollowDtoRules, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
@@ -66,6 +66,35 @@ async function updateUser(id: string, userUpdateDto: UserUpdateDto): Promise<Use
 
 async function getUser(id: string): Promise<UserDto | null> {
     const user: IUser | null = await User.findById(id);
+    if (user != null) {
+        await user.populate([
+            {
+                path: "followers",
+                select: "_id username firstName lastName image",
+                options:
+                {
+                    limit: 10
+                }
+            },
+            {
+                path: "following",
+                select: "_id username firstName lastName image",
+                options:
+                {
+                    limit: 10
+                }
+            },
+            {
+                path: "posts",
+                select: "_id content",
+                options:
+                {
+                    limit: 20,
+                    sort: { created: -1 }
+                }
+            }
+        ]).execPopulate();
+    }
     const userDto: UserDto | null = user == null ? null : new UserDto(user);
     return userDto;
 };
@@ -84,7 +113,7 @@ async function signIn(userSignInDto: UserSignInDto): Promise<string | null> {
 };
 
 async function follow(id: string, userFollowDto: UserFollowDto): Promise<void> {
-    await Promise.all([User.findByIdAndUpdate(id, { $push: { following: userFollowDto.id } }), User.findByIdAndUpdate(userFollowDto.id, { $push: { followers: id } })]);
+    await Promise.all([User.findByIdAndUpdate(id, { $addToSet: { following: userFollowDto.id } }), User.findByIdAndUpdate(userFollowDto.id, { $addToSet: { followers: id } })]);
 }
 
 async function unfollow(id: string, unfollowId: string): Promise<void> {
