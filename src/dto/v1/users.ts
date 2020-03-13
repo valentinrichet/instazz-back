@@ -143,7 +143,7 @@ export function userSignInDtoRules(): ValidationChain[] {
 
 /* *** */
 
-/* UserSignIn */
+/* UserFollowDto */
 
 export class UserFollowDto {
     public id: IUser["id"];
@@ -157,6 +157,26 @@ export function userFollowDtoRules(): ValidationChain[] {
     return [
         body("id", "Email is not an email").isMongoId()
     ];
+}
+
+/* *** */
+
+/* UserFollowDto */
+
+export class UserFollowingAndFollowerDto {
+    public id: IUser["id"];
+    public username: IUser["username"];
+    public firstName: IUser["firstName"];
+    public lastName: IUser["lastName"];
+    public image: IUser["image"];
+
+    public constructor(json: IUser) {
+        this.id = json?._id;
+        this.username = json?.username;
+        this.firstName = json?.firstName;
+        this.lastName = json?.lastName;
+        this.image = json?.image;
+    }
 }
 
 /* *** */

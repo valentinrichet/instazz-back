@@ -1,4 +1,4 @@
-import { UserCreationDto, userCreationDtoRules, UserDto, UserFollowDto, userFollowDtoRules, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules } from "../../dto/v1/users";
+import { UserCreationDto, userCreationDtoRules, UserDto, UserFollowDto, userFollowDtoRules, UserSignInDto, userSignInDtoRules, UserUpdateDto, userUpdateDtoRules, UserFollowingAndFollowerDto } from "../../dto/v1/users";
 import { createJWToken } from "../../libs/auth";
 import { hash } from "../../libs/hash";
 import User, { IUser } from "../../models/v1/users";
@@ -120,6 +120,38 @@ async function unfollow(id: string, unfollowId: string): Promise<void> {
     await Promise.all([User.findByIdAndUpdate(id, { $pull: { following: unfollowId } }), User.findByIdAndUpdate(unfollowId, { $pull: { followers: id } })]);
 }
 
+async function getFollowers(id: string, page: string): Promise<UserFollowingAndFollowerDto[] | null> {
+    const limit: number = 10;
+    const start: number = (parseInt(page) - 1) * limit;
+    const user = await User.findById(id).populate({
+        path: "followers",
+        select: "_id username firstName lastName image",
+        options:
+        {
+            start: start,
+            limit: limit
+        }
+    });
+    const userFollowers: UserFollowingAndFollowerDto[] | null = user == null ? null : user.followers.map(follower => new UserFollowingAndFollowerDto(follower));
+    return userFollowers;
+}
+
+async function getFollowing(id: string, page: string): Promise<UserFollowingAndFollowerDto[] | null> {
+    const limit: number = 10;
+    const start: number = (parseInt(page) - 1) * limit;
+    const user = await User.findById(id).populate({
+        path: "following",
+        select: "_id username firstName lastName image",
+        options:
+        {
+            start: start,
+            limit: limit
+        }
+    });
+    const userFollowing: UserFollowingAndFollowerDto[] | null = user == null ? null : user.following.map(follower => new UserFollowingAndFollowerDto(follower));
+    return userFollowing;
+}
+
 export default {
     getUser,
     createUser,
@@ -127,5 +159,7 @@ export default {
     signIn,
     follow,
     unfollow,
+    getFollowers,
+    getFollowing,
     validate
 };
