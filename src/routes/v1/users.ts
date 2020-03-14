@@ -36,7 +36,8 @@ router.post("/v1/test", async (req, res) => {
 router.post(`/v1/sessions`, UserController.validate("signIn"), validator);
 router.post("/v1/sessions", async (req, res, next) => {
    try {
-      const token: string | null = await UserController.signIn(new UserSignInDto(req.body));
+      const userSignInDto: UserSignInDto = new UserSignInDto(req.body);
+      const token: string | null = await UserController.signIn(userSignInDto);
       if (token == null) {
          return res.status(401).send("Email or Password was wrong");
       }
@@ -49,8 +50,9 @@ router.post("/v1/sessions", async (req, res, next) => {
 router.post("/v1/users", UserController.validate("createUser"), validator);
 router.post("/v1/users", async (req, res, next) => {
    try {
-      const user: UserDto = await UserController.createUser(new UserCreationDto(req.body));
-      return res.send(user);
+      const userCreationDto: UserCreationDto = new UserCreationDto(req.body);
+      const userDto: UserDto = await UserController.createUser(userCreationDto);
+      return res.send(userDto);
    } catch (error) {
       next(error);
    }
@@ -60,11 +62,11 @@ router.get("/v1/users/:id", verifyJWT_MW);
 router.get("/v1/users/:id", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
-      const user: UserDto | null = await UserController.getUser(userId);
-      if (user == null) {
+      const userDto: UserDto | null = await UserController.getUser(userId);
+      if (userDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
       }
-      return res.send(user);
+      return res.send(userDto);
    } catch (error) {
       next(error);
    }
@@ -166,6 +168,5 @@ router.delete("/v1/users/:id/following/:followerId", async (req, res, next) => {
       next(error);
    }
 });
-
 
 export const UserRoute = router;
