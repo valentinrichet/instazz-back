@@ -12,8 +12,10 @@ const router: Router = express.Router();
 router.get("/v1/posts", verifyJWT_MW);
 router.get("/v1/posts", async (req, res, next) => {
     try {
+        const page: string = req.query.page == null ? "1" : req.query.page;
+        const tag: string = req.query.tag;
         const userData: UserData = ((req as any).user as UserData);
-        const postsDto: PostDto[] = await PostController.getPosts(userData.id);
+        const postsDto: PostDto[] = await PostController.getPosts(userData.id, page, tag);
         return res.send(postsDto);
     } catch (error) {
         next(error);

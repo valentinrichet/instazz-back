@@ -1,6 +1,7 @@
 import { CreationPostDto, postCreationDtoRules, PostDto, postUpdateDtoRules, UpdatePostDto } from '../../dto/v1/posts';
 import Post, { IPost } from '../../models/v1/posts';
 import User from '../../models/v1/users';
+import Environment from '../../libs/environment';
 
 export interface IPostCreation {
     title: IPost["title"];
@@ -32,8 +33,14 @@ function validate(method: string): any {
     }
 }
 
-async function getPosts(userId: string): Promise<PostDto[]> {
-    const posts: IPost[] = await Post.find({});
+async function getPosts(userId: string, page: string, tag: string): Promise<PostDto[]> {
+    const skip: number = (parseInt(page) - 1) * Environment.queryLimit;
+    const posts: IPost[] = await Post.find(tag != null ? { tags: tag } : {},
+        null,
+        {
+            skip: skip,
+            limit: Environment.queryLimit
+        });
     const postsDto: PostDto[] = posts.map(post => new PostDto(post, userId));
     return postsDto;
 };

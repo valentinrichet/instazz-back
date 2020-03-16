@@ -101,7 +101,7 @@ router.get("/v1/users/:id/posts", verifyJWT_MW);
 router.get("/v1/users/:id/posts", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
-      const page: string = req.query.page == null ? "0" : req.query.page;
+      const page: string = req.query.page == null ? "1" : req.query.page;
       const postsDto: UserPostDto[] | null = await UserController.getPosts(userId, page);
       if (postsDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
@@ -116,7 +116,7 @@ router.get("/v1/users/:id/following", verifyJWT_MW);
 router.get("/v1/users/:id/following", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
-      const page: string = req.query.page == null ? "0" : req.query.page;
+      const page: string = req.query.page == null ? "1" : req.query.page;
       const followingDto: UserFollowingAndFollowerDto[] | null = await UserController.getFollowing(userId, page);
       if (followingDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
@@ -131,7 +131,7 @@ router.get("/v1/users/:id/followers", verifyJWT_MW);
 router.get("/v1/users/:id/followers", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
-      const page: string = req.query.page == null ? "0" : req.query.page;
+      const page: string = req.query.page == null ? "1" : req.query.page;
       const followersDto: UserFollowingAndFollowerDto[] | null = await UserController.getFollowers(userId, page);
       if (followersDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
