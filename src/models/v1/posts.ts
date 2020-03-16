@@ -13,7 +13,7 @@ export interface IPost extends Document {
     author: string;
     created: Date;
     likedBy: [string];
-    likedByCount: number;
+    likedCount: number;
     comments: [Comment];
 }
 
@@ -21,8 +21,7 @@ const PostSchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     tags: [{
-        type: Schema.Types.ObjectId,
-        ref: "Tags",
+        type: String,
         required: true
     }],
     content: { type: String, required: true, unique: true },
@@ -36,7 +35,7 @@ const PostSchema: Schema = new Schema({
     }]
 });
 
-PostSchema.virtual("likedByCount").get(function (this: IPost) {
+PostSchema.virtual("likedCount").get(function (this: IPost) {
     return this.likedBy.length;
 });
 

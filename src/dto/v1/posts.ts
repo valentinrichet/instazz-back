@@ -12,11 +12,11 @@ export class PostDto {
     public content: IPost["content"];
     public author: IPost["author"];
     public created: IPost["created"];
-    public likedBy: IPost["likedBy"];
-    public likedByCount: IPost["likedByCount"];
+    public likedCount: IPost["likedCount"];
+    public hasUserLiked: boolean;
     public comments: IPost["comments"];
 
-    public constructor(post: IPost) {
+    public constructor(post: IPost, userId?: string) {
         this.id = post?._id;
         this.title = post?.title;
         this.description = post?.description;
@@ -24,8 +24,8 @@ export class PostDto {
         this.content = post?.content;
         this.author = post?.author;
         this.created = post?.created;
-        this.likedBy = post?.likedBy;
-        this.likedByCount = post?.likedByCount;
+        this.likedCount = post?.likedCount;
+        this.hasUserLiked = userId == null || post.likedBy == null ? false : post.likedBy.some(id => id == userId);
         this.comments = post?.comments;
     }
 }

@@ -8,15 +8,15 @@ export class UserDto {
     public id: IUser["_id"];
     public username: IUser["username"];
     public email: IUser["email"];
-    public image: IUser["image"];
+    public image: string;
     public description: string;
     public firstName: IUser["firstName"];
     public lastName: IUser["lastName"];
     public role: IUser["role"];
     public signedUp: IUser["signedUp"];
-    public posts: IUser["posts"];
-    public followers: IUser["followers"];
-    public following: IUser["following"];
+    public posts: UserPostDto[];
+    public followers: UserFollowingAndFollowerDto[];
+    public following: UserFollowingAndFollowerDto[];
 
     public constructor(user: IUser) {
         this.id = user?._id;
@@ -28,9 +28,9 @@ export class UserDto {
         this.lastName = user?.lastName;
         this.role = user?.role;
         this.signedUp = user?.signedUp;
-        this.posts = user?.posts;
-        this.followers = user?.followers;
-        this.following = user?.following;
+        this.posts = user?.posts == null ? [] : user.posts.map(post => new UserPostDto(post));
+        this.followers = user?.followers == null ? [] : user.followers.map(follower => new UserFollowingAndFollowerDto(follower));
+        this.following = user?.following == null ? [] : user.following.map(follow => new UserFollowingAndFollowerDto(follow));
     }
 }
 
@@ -78,7 +78,7 @@ export class UserUpdateDto {
     public lastName?: IUser["lastName"];
     public role?: IUser["role"];
 
-    public constructor(json: any) {
+    public constructor(json: any, image?: string) {
         if (json != null) {
             if (json.username != null) {
                 this.username = json.username;
@@ -89,8 +89,8 @@ export class UserUpdateDto {
             if (json.email != null) {
                 this.email = json.email;
             }
-            if (json.image !== undefined) {
-                this.image = json.image;
+            if (image != null) {
+                this.image = image;
             }
             if (json.description !== undefined) {
                 this.description = json.description;
@@ -113,7 +113,6 @@ export function userUpdateDtoRules(): ValidationChain[] {
         body("username", "Username is missing").optional().notEmpty(),
         body("password", "Password must be 6 character long").optional().isLength({ min: 6 }),
         body("email", "Email is not an email").optional().isEmail(),
-        body("image").optional(),
         body("description").optional(),
         body("firstName", "First Name is missing").optional().notEmpty(),
         body("lastName", "Last Name is missing").optional().notEmpty(),
@@ -191,16 +190,16 @@ export class UserFollowingAndFollowerDto {
 export class UserPostDto {
     public id: IPost["_id"];
     public content: IPost["content"];
-    public likedByCount: IPost["likedByCount"];
+    public likedCount: IPost["likedCount"];
 
     public constructor(json: IPost) {
         this.id = json?._id;
         this.content = json?.content;
-        this.likedByCount = json?.likedByCount;
+        this.likedCount = json?.likedCount;
     }
 
     public static get select(): string {
-        return "_id content likedByCount";
+        return "_id content likedBy likedCount";
     }
 }
 

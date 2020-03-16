@@ -73,12 +73,17 @@ router.get("/v1/users/:id", async (req, res, next) => {
 });
 
 router.put("/v1/users/:id", isAdminOrUser_MW);
+router.put("/v1/users/:id", multer({ storage: getDiskStorage("profile"), fileFilter: imageFilter }).single("image"), async (err: any, req: any, res: any, next: any) => {
+   const { image, ...other } = req.body;
+   req.body = { ...other };
+   next();
+});
 router.put("/v1/users/:id", UserController.validate("updateUser"), validator);
 router.put("/v1/users/:id", async (req, res, next) => {
    try {
       const userId: string = req.params.id;
       const userData: UserData = ((req as any).user as UserData);
-      const userUpdateDto: UserUpdateDto = new UserUpdateDto(req.body);
+      const userUpdateDto: UserUpdateDto = new UserUpdateDto(req.body, req.file?.path);
       if (userData.role !== "admin") {
          delete userUpdateDto.role;
       }
@@ -101,7 +106,7 @@ router.get("/v1/users/:id/posts", async (req, res, next) => {
       if (postsDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
       }
-      return res.status(200).send(postsDto);
+      return res.send(postsDto);
    } catch (error) {
       next(error);
    }
@@ -116,7 +121,7 @@ router.get("/v1/users/:id/following", async (req, res, next) => {
       if (followingDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
       }
-      return res.status(200).send(followingDto);
+      return res.send(followingDto);
    } catch (error) {
       next(error);
    }
@@ -131,7 +136,7 @@ router.get("/v1/users/:id/followers", async (req, res, next) => {
       if (followersDto == null) {
          return res.status(404).send(`User with id "${userId}" was not found`);
       }
-      return res.status(200).send(followersDto);
+      return res.send(followersDto);
    } catch (error) {
       next(error);
    }
