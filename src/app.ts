@@ -3,6 +3,7 @@ import express, { Express } from "express";
 import * as winston from 'winston';
 import connectToDb from './libs/database';
 import Environment from "./libs/environment";
+import CrossDomain from "./middlewares/cross_domain";
 import ErrorHandler from "./middlewares/error";
 import { Routes } from "./routes";
 import expressWinston = require('express-winston');
@@ -17,6 +18,7 @@ app.use(expressWinston.logger({
         new winston.transports.Console({})
     ]
 }));
+app.use(CrossDomain);
 app.use(Routes);
 app.use(ErrorHandler);
 
